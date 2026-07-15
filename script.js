@@ -135,9 +135,7 @@ async function fetchWeatherByCity(city) {
 
 // 6. Fetch Forecast & AQI
 async function fetchForecastAndPollution(lat, lon) {
-    // 5-Day / 3-Hour Forecast Data
     const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=metric&appid=${API_KEY}`;
-    // Air Quality Index Data
     const pollutionUrl = `https://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${API_KEY}`;
 
     try {
@@ -173,12 +171,16 @@ function updateUI(data) {
     weatherDesc.textContent = description.charAt(0).toUpperCase() + description.slice(1);
     weatherIcon.className = `fas ${getFontAwesomeIcon(data.weather[0].icon)}`;
 
-    // Sun Cycles Formatting
-    const sunOptions = { hour: '2-digit', minute: '2-digit', hour12: true };
-    sunriseTime.textContent = new Date(data.sys.sunrise * 1000).toLocaleTimeString([], sunOptions);
-    sunsetTime.textContent = new Date(data.sys.sunset * 1000).toLocaleTimeString([], sunOptions);
+    // Sun Cycles Formatting using target city shifting
+    const targetOffset = data.timezone; 
+    const localSunriseDate = new Date((data.sys.sunrise + targetOffset) * 1000);
+    const localSunsetDate = new Date((data.sys.sunset + targetOffset) * 1000);
+    
+    const sunOptions = { hour: '2-digit', minute: '2-digit', timeZone: 'UTC', hour12: true };
+    sunriseTime.textContent = localSunriseDate.toLocaleTimeString('en-US', sunOptions);
+    sunsetTime.textContent = localSunsetDate.toLocaleTimeString('en-US', sunOptions);
 
-    // Dynamic UV Index Estimation based on Clouds & Sunset parameters
+    // Dynamic UV Index Estimation using timezone adjustments
     calculateUVEstimate(data);
     updateFavoriteButtonState();
 }
@@ -200,11 +202,19 @@ function updateAQI(aqiObj) {
     aqiDesc.textContent = target.desc;
 }
 
-// Helper to estimate safe UV Index
+// Timezone-aware UV Index Estimation
 function calculateUVEstimate(data) {
-    const cloudCover = data.clouds.all; // 0 to 100
-    const now = Math.floor(Date.now() / 1000);
-    const isDaylight = now > data.sys.sunrise && now < data.sys.sunset;
+    const cloudCover = data.clouds.all;
+    
+    // Get the current UTC time in seconds
+    const utcNow = Math.floor(Date.now() / 1000);
+    // Adjust time according to the searched city's timezone offset from UTC
+    const localTimeAtTarget = utcNow + data.timezone;
+    
+    const localSunrise = data.sys.sunrise + data.timezone;
+    const localSunset = data.sys.sunset + data.timezone;
+    
+    const isDaylight = localTimeAtTarget > localSunrise && localTimeAtTarget < localSunset;
 
     if (!isDaylight) {
         uvValue.textContent = "0";
@@ -212,11 +222,24 @@ function calculateUVEstimate(data) {
         return;
     }
 
-    // Rough calculation matching general daylight parameters
-    let baseUV = 10 - (cloudCover / 10);
-    baseUV = Math.max(1, Math.min(11, baseUV));
-    const finalUV = Math.round(baseUV);
+    // Midday represents peak UV intensity. Let's calculate how close the city is to local solar noon.
+    const dayLength = localSunset - localSunrise;
+    const midDay = localSunrise + (dayLength / 2);
+    
+    // How far off is the city from its solar noon? (Normalized curve)
+    const timeFromNoon = Math.abs(localTimeAtTarget - midDay);
+    const timePercentageFromNoon = timeFromNoon / (dayLength / 2); // 0 at noon, 1 at sunset/sunrise
 
+    // Base UV index maxes out around 10 depending on solar alignment
+    let solarFactor = 10 * (1 - timePercentageFromNoon); 
+    
+    // Cloud cover blocks UV rays dynamically
+    let cloudModifier = 1 - (cloudCover / 150); 
+    
+    let finalUV = Math.round(solarFactor * cloudModifier);
+    finalUV = Math.max(1, Math.min(11, finalUV)); // Safe bounds clamping
+
+    // Update UI elements instantly
     uvValue.textContent = finalUV;
     if (finalUV <= 2) uvStatus.textContent = "Low";
     else if (finalUV <= 5) uvStatus.textContent = "Moderate";
