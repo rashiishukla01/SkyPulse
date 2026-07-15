@@ -30,7 +30,7 @@
             </div>
         </header>
 
-        <!-- Main Content Grid -->
+        <!-- Main Content Area -->
         <main>
             <!-- Search, Favorites & Recents Panel -->
             <section class="search-section">
@@ -63,7 +63,7 @@
                 <p>City not found. Please try again with a valid city name.</p>
             </div>
 
-            <!-- Grid Layout -->
+            <!-- Main Dashboard Grid Layout -->
             <div class="dashboard-grid">
                 
                 <!-- Left Side: Core Current Metrics -->
@@ -81,33 +81,46 @@
                                 </div>
                             </div>
                         </div>
+                        <!-- Dynamic AI Weather Insight Banner -->
+                        <div id="weather-recommendation" class="weather-insight-banner">
+                            <i class="fas fa-wand-magic-sparkles"></i>
+                            <span id="insight-text">Analyzing atmospheric conditions...</span>
+                        </div>
                     </div>
 
-                    <!-- Metrics Grid -->
+                    <!-- Metrics Sub-Grid -->
                     <div class="metrics-grid">
                         <div class="metric-card">
-                            <i class="fas fa-thermometer-half"></i>
+                            <div class="metric-display-wrapper">
+                                <i class="fas fa-thermometer-half"></i>
+                            </div>
                             <div class="metric-info">
                                 <h3>Feels Like</h3>
                                 <p id="feels-like">--</p>
                             </div>
                         </div>
                         <div class="metric-card">
-                            <i class="fas fa-droplet"></i>
+                            <div class="metric-display-wrapper">
+                                <i class="fas fa-droplet"></i>
+                            </div>
                             <div class="metric-info">
                                 <h3>Humidity</h3>
                                 <p id="humidity">--</p>
                             </div>
                         </div>
                         <div class="metric-card">
-                            <i class="fas fa-wind"></i>
+                            <div class="metric-display-wrapper">
+                                <i class="fas fa-wind"></i>
+                            </div>
                             <div class="metric-info">
                                 <h3>Wind Speed</h3>
                                 <p id="wind-speed">--</p>
                             </div>
                         </div>
                         <div class="metric-card">
-                            <i class="fas fa-compress-alt"></i>
+                            <div class="metric-display-wrapper">
+                                <i class="fas fa-compress-alt"></i>
+                            </div>
                             <div class="metric-info">
                                 <h3>Pressure</h3>
                                 <p id="pressure">--</p>
@@ -116,7 +129,7 @@
                     </div>
                 </div>
 
-                <!-- Right Side: Advanced Metrics (AQI, UV, Sun) -->
+                <!-- Right Side: Advanced Environmental Panels -->
                 <div class="right-panel">
                     <div class="advanced-grid">
                         <!-- Air Quality Card -->

@@ -18,6 +18,8 @@ const currentDate = document.getElementById('current-date');
 const temperature = document.getElementById('temperature');
 const weatherIcon = document.getElementById('weather-icon');
 const weatherDesc = document.getElementById('weather-description');
+const insightText = document.getElementById('insight-text');
+const insightBanner = document.getElementById('weather-recommendation');
 
 // Sub Metrics Elements
 const feelsLike = document.getElementById('feels-like');
@@ -39,7 +41,7 @@ const dailyList = document.getElementById('daily-list');
 
 // API Configuration
 const API_KEY = 'bdc083837e979d0ee858d7df90fde8dd';
-let currentCityName = ''; // Tracks the active search target
+let currentCityName = ''; 
 
 // Storage State Pools
 let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
@@ -59,7 +61,6 @@ themeToggleBtn.addEventListener('click', () => {
     }
 });
 
-// Load saved theme choice
 const savedTheme = localStorage.getItem('theme') || 'light';
 document.documentElement.setAttribute('data-theme', savedTheme);
 themeToggleBtn.innerHTML = savedTheme === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
@@ -205,10 +206,7 @@ function updateAQI(aqiObj) {
 // Timezone-aware UV Index Estimation
 function calculateUVEstimate(data) {
     const cloudCover = data.clouds.all;
-    
-    // Get the current UTC time in seconds
     const utcNow = Math.floor(Date.now() / 1000);
-    // Adjust time according to the searched city's timezone offset from UTC
     const localTimeAtTarget = utcNow + data.timezone;
     
     const localSunrise = data.sys.sunrise + data.timezone;
@@ -218,33 +216,72 @@ function calculateUVEstimate(data) {
 
     if (!isDaylight) {
         uvValue.textContent = "0";
-        uvStatus.textContent = "Nighttime";
+        uvStatus.textContent = "Night"; // Updated to cleanly show "Night" matching the shorter style tag
+        generateWeatherInsight(data, 0);
         return;
     }
 
-    // Midday represents peak UV intensity. Let's calculate how close the city is to local solar noon.
     const dayLength = localSunset - localSunrise;
     const midDay = localSunrise + (dayLength / 2);
     
-    // How far off is the city from its solar noon? (Normalized curve)
     const timeFromNoon = Math.abs(localTimeAtTarget - midDay);
-    const timePercentageFromNoon = timeFromNoon / (dayLength / 2); // 0 at noon, 1 at sunset/sunrise
+    const timePercentageFromNoon = timeFromNoon / (dayLength / 2); 
 
-    // Base UV index maxes out around 10 depending on solar alignment
     let solarFactor = 10 * (1 - timePercentageFromNoon); 
-    
-    // Cloud cover blocks UV rays dynamically
     let cloudModifier = 1 - (cloudCover / 150); 
     
     let finalUV = Math.round(solarFactor * cloudModifier);
-    finalUV = Math.max(1, Math.min(11, finalUV)); // Safe bounds clamping
+    finalUV = Math.max(1, Math.min(11, finalUV)); 
 
-    // Update UI elements instantly
     uvValue.textContent = finalUV;
     if (finalUV <= 2) uvStatus.textContent = "Low";
     else if (finalUV <= 5) uvStatus.textContent = "Moderate";
     else if (finalUV <= 7) uvStatus.textContent = "High";
     else uvStatus.textContent = "Very High";
+
+    generateWeatherInsight(data, finalUV);
+}
+
+// Contextual AI Smart Weather Insights Generator
+function generateWeatherInsight(data, calculatedUV) {
+    const mainCondition = data.weather[0].main.toLowerCase();
+    const temp = Math.round(data.main.temp);
+    
+    let message = "Atmosphere looks steady. Have a wonderful day ahead!";
+    let iconClass = "fa-wand-magic-sparkles";
+
+    if (mainCondition.includes('rain') || mainCondition.includes('drizzle') || mainCondition.includes('thunderstorm')) {
+        message = "Rain alert! Heavy skies possible—carry an umbrella or raincoat today. ☔";
+        iconClass = "fa-cloud-showers-heavy";
+    }
+    else if (mainCondition.includes('snow')) {
+        message = "Snow accumulation detected. Bundle up heavily and watch your step out there! ❄️";
+        iconClass = "fa-snowflake";
+    }
+    else if (mainCondition.includes('clear')) {
+        if (calculatedUV >= 6) {
+            message = "Intense sun outside! Apply sunscreen (SPF 30+) and protect your eyes. 🧴🕶️";
+            iconClass = "fa-sun";
+        } else if (temp >= 35) {
+            message = "High heat wave conditions. Keep hydrated and minimize direct outdoor exposures. 🥵🥛";
+            iconClass = "fa-temperature-high";
+        } else {
+            message = "Bright clear skies ahead. Perfect conditions for outdoor plans! ☀️";
+            iconClass = "fa-sun";
+        }
+    }
+    else if (data.weather[0].id >= 700 && data.weather[0].id < 800) {
+        message = "Reduced atmospheric visibility. Drive cautiously and turn on fog lights if traveling. 🌫️🚗";
+        iconClass = "fa-smog";
+    }
+    else if (mainCondition.includes('clouds')) {
+        message = "Overcast cloud cover today. Pleasant weather to head out without extreme sun glare. ☁️";
+        iconClass = "fa-cloud";
+    }
+
+    insightText.textContent = message;
+    const bannerIcon = insightBanner.querySelector('i');
+    bannerIcon.className = `fas ${iconClass}`;
 }
 
 // 9. Process and Render Carousels
@@ -275,7 +312,7 @@ function renderForecast(forecastList) {
         const dateStr = new Date(item.dt * 1000).toLocaleDateString([], { weekday: 'long' });
         const todayStr = new Date().toLocaleDateString([], { weekday: 'long' });
         
-        if (dateStr === todayStr) return; // Skip today's list array
+        if (dateStr === todayStr) return; 
 
         if (!uniqueDays[dateStr]) {
             uniqueDays[dateStr] = [];
@@ -283,12 +320,10 @@ function renderForecast(forecastList) {
         uniqueDays[dateStr].push(item);
     });
 
-    // Render each day row
     Object.keys(uniqueDays).slice(0, 5).forEach(day => {
         const readings = uniqueDays[day];
-        // Calculate max temperature
         const maxTemp = Math.round(Math.max(...readings.map(r => r.main.temp)));
-        const condition = readings[Math.floor(readings.length / 2)].weather[0]; // mid-day preview
+        const condition = readings[Math.floor(readings.length / 2)].weather[0]; 
 
         const row = document.createElement('div');
         row.className = 'day-row';
@@ -322,7 +357,7 @@ function addToRecents(city) {
         recents = recents.filter(c => c !== city);
     }
     recents.unshift(city);
-    if (recents.length > 5) recents.pop(); // Max 5 items
+    if (recents.length > 5) recents.pop(); 
     localStorage.setItem('recents', JSON.stringify(recents));
     renderSavedLists();
 }
@@ -337,7 +372,6 @@ function updateFavoriteButtonState() {
 }
 
 function renderSavedLists() {
-    // Render Favorites
     if (favorites.length > 0) {
         favoritesContainer.classList.remove('hidden');
         favoritesItems.innerHTML = '';
@@ -352,7 +386,6 @@ function renderSavedLists() {
         favoritesContainer.classList.add('hidden');
     }
 
-    // Render Recents
     if (recents.length > 0) {
         recentsContainer.classList.remove('hidden');
         recentsItems.innerHTML = '';
