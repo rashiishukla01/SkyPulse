@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkyPulse - Advanced Weather Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- FontAwesome for UI & weather icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Navigation Header -->
+        <header>
+            <div class="logo-container">
+                <img src="logo.png" alt="SkyPulse Logo" class="logo-img">
+                <div class="brand-text">
+                    <h1>SKY PULSE</h1>
+                    <span class="tagline">LIVE WEATHER. LIVE BETTER.</span>
+                </div>
+            </div>
+            
+            <div class="header-controls">
+                <button id="location-btn" title="Use current location">
+                    <i class="fas fa-location-crosshairs"></i>
+                </button>
+                <button id="theme-toggle" aria-label="Toggle dark/light mode">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content Grid -->
+        <main>
+            <!-- Search, Favorites & Recents Panel -->
+            <section class="search-section">
+                <div class="search-bar-container">
+                    <div class="search-bar">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" id="city-input" placeholder="Search for any city...">
+                        <button id="search-btn">Search</button>
+                    </div>
+                    <button id="favorite-btn" title="Add to favorites">
+                        <i class="far fa-star"></i>
+                    </button>
+                </div>
+
+                <!-- Interactive Quick-Lists -->
+                <div class="history-lists">
+                    <div id="favorites-container" class="quick-list hidden">
+                        <span class="list-title">Favorites:</span>
+                        <div id="favorites-items" class="list-items"></div>
+                    </div>
+                    <div id="recents-container" class="quick-list hidden">
+                        <span class="list-title">Recent:</span>
+                        <div id="recents-items" class="list-items"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Error Message Box -->
+            <div id="error-message" class="error-box hidden">
+                <p>City not found. Please try again with a valid city name.</p>
+            </div>
+
+            <!-- Grid Layout -->
+            <div class="dashboard-grid">
+                
+                <!-- Left Side: Core Current Metrics -->
+                <div class="left-panel">
+                    <!-- Main Current Weather Card -->
+                    <div class="weather-card main-card">
+                        <div class="main-info">
+                            <h2 id="city-name">Loading...</h2>
+                            <p id="current-date">--</p>
+                            <div class="temp-condition">
+                                <span id="temperature">--°C</span>
+                                <div class="condition-box">
+                                    <i id="weather-icon" class="fas fa-spinner fa-spin"></i>
+                                    <span id="weather-description">Detecting...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Metrics Grid -->
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <i class="fas fa-thermometer-half"></i>
+                            <div class="metric-info">
+                                <h3>Feels Like</h3>
+                                <p id="feels-like">--</p>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <i class="fas fa-droplet"></i>
+                            <div class="metric-info">
+                                <h3>Humidity</h3>
+                                <p id="humidity">--</p>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <i class="fas fa-wind"></i>
+                            <div class="metric-info">
+                                <h3>Wind Speed</h3>
+                                <p id="wind-speed">--</p>
+                            </div>
+                        </div>
+                        <div class="metric-card">
+                            <i class="fas fa-compress-alt"></i>
+                            <div class="metric-info">
+                                <h3>Pressure</h3>
+                                <p id="pressure">--</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Side: Advanced Metrics (AQI, UV, Sun) -->
+                <div class="right-panel">
+                    <div class="advanced-grid">
+                        <!-- Air Quality Card -->
+                        <div class="adv-card aqi-card">
+                            <div class="card-header">
+                                <i class="fas fa-wind"></i> Air Quality Index
+                            </div>
+                            <div class="aqi-body">
+                                <span id="aqi-level" class="aqi-badge">--</span>
+                                <p id="aqi-desc">Detecting pollution data...</p>
+                            </div>
+                        </div>
+
+                        <!-- UV Index Card -->
+                        <div class="adv-card uv-card">
+                            <div class="card-header">
+                                <i class="fas fa-sun"></i> UV Index
+                            </div>
+                            <div class="uv-body">
+                                <span id="uv-value" class="uv-num">--</span>
+                                <span id="uv-status" class="uv-label">--</span>
+                            </div>
+                        </div>
+
+                        <!-- Sunrise & Sunset Card -->
+                        <div class="adv-card sun-card">
+                            <div class="card-header">
+                                <i class="fas fa-circle-notch"></i> Sun Cycle
+                            </div>
+                            <div class="sun-body">
+                                <div class="sun-time">
+                                    <i class="fas fa-arrow-up sun-up"></i>
+                                    <div>
+                                        <small>Sunrise</small>
+                                        <p id="sunrise-time">--:--</p>
+                                    </div>
+                                </div>
+                                <div class="sun-time">
+                                    <i class="fas fa-arrow-down sun-down"></i>
+                                    <div>
+                                        <small>Sunset</small>
+                                        <p id="sunset-time">--:--</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Horizontal Carousel: Hourly Forecast -->
+            <section class="forecast-section">
+                <h3 class="section-title">Hourly Forecast (Next 24 Hours)</h3>
+                <div id="hourly-carousel" class="carousel">
+                    <!-- Dynamic Hours populate here -->
+                </div>
+            </section>
+
+            <!-- Vertical List: 5-Day Forecast -->
+            <section class="forecast-section">
+                <h3 class="section-title">5-Day Weather Forecast</h3>
+                <div id="daily-list" class="daily-list">
+                    <!-- Dynamic Days populate here -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
